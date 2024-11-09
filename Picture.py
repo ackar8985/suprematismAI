@@ -1,27 +1,30 @@
 import random
 from PIL import Image, ImageDraw
 import math
+from copy import deepcopy
 
 
 class Picture:
+
     def __init__(self):
         # Define instance variables with self.
-        self.colors = ["red", "blue", "green", "yellow", "black"]
+        self.colors = ["red", "blue", "green", "yellow", "black", "cyan", "pink"]
         self.shapes = []
         self.outside = 0
         self.inside = 0
-        self.max_shapes = 20
+        self.max_shapes = 4
         self.width, self.height = 1000, 1000
-        
+
         # Generate random shapes
-        shape_functions = [self.random_circle, self.random_square, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
+        self.shape_functions = [self.random_circle, self.random_square, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
         num_shapes = random.randint(1, self.max_shapes)
 
         for _ in range(num_shapes):
-            random.choice(shape_functions)() #(draw)
-            
-            
-        
+            random.choice(self.shape_functions)() #(draw)  
+         
+    def copy(self):
+        copyPic = deepcopy(self)
+        return copyPic
 
     def random_circle(self):
         radius = random.randint(20, 100)
@@ -86,7 +89,7 @@ class Picture:
                     self.outside += 1
                 else:
                     self.inside += 1
-        overallFitness = self.inside
+        overallFitness = self.inside - self.outside
         print("Outside:", self.outside)
         print("Inside:", self.inside)
         print("Fitness:", (self.inside - self.outside))
@@ -96,7 +99,7 @@ class Picture:
     def getShapes(self):
         return self.shapes
         
-    def display(self):
+    def display(self): #display pictures as png
         canvas = Image.new("RGB", (self.width, self.height), "white")
         draw = ImageDraw.Draw(canvas)
 
@@ -149,4 +152,34 @@ class Picture:
 
         # Show canvas and results
         canvas.show()
+    
+    def mutate(self):
+        randomIndex = random.randint(0, len(self.shapes))
+        self.shapes[randomIndex] = random.choice(self.shape_functions)()
+    
+    def cross(self, target):
+        if len(self.shapes) < len(target.shapes):
+            crossIndex = random.randint(0, len(self.shapes)) #the target picture may have more shapes than the crosser
+            print(crossIndex)
+            for i in range(crossIndex, len(self.shapes)):
+                self.shapes[i] = target.shapes[i]
+        else:
+            crossIndex = random.randint(0, len(target.shapes)) #the target picture may have more shapes than the crosser
+            print(crossIndex)
+            for i in range(crossIndex, len(target.shapes)):
+                self.shapes[i] = target.shapes[i]              
+
+    def breedingStep(pic1, pic2):
+        child1 = pic1.copy()
+        child2 = pic2.copy()
+
+        child1.cross(pic2) #bug: doesn't cross when the parent only has 1 shape
+        child2.cross(pic1)
+
+        # child1.mutate()
+        # child2.mutate()
+
+        children = [child1, child2]
+
+        return children
        
