@@ -78,17 +78,20 @@ class Picture:
         #draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=color, outline=color)
         self.shapes.append(('triangle', ((x1, y1), (x2, y2), (x3, y3)), color))
 
-    def findInsideOutside(self):
-        for shape_type, shape_coords in self.shapes:
+    def findInsideOutside(self):    #find fitness
+        overallFitness = 0
+        for shape_type, shape_coords, _ in self.shapes:
             for point in shape_coords:
                 if point[0] < 300 or point[0] > 700:
                     self.outside += 1
                 else:
                     self.inside += 1
+        overallFitness = self.inside
         print("Outside:", self.outside)
         print("Inside:", self.inside)
         print("Fitness:", (self.inside - self.outside))
         print("Total shapes:", len(self.shapes))
+        return overallFitness
 
     def getShapes(self):
         return self.shapes

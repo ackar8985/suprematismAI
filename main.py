@@ -7,8 +7,8 @@ picture1.display()
 picture2.display()
 
 
-print(picture1.getShapes())
-print("\n\n\n\n")
-print(picture2.getShapes())
+# print(picture1.getShapes())
+# print("\n\n\n\n")
+# print(picture2.getShapes())
 
-#for shape in picture1.getShapes
+picture1.findInsideOutside()
