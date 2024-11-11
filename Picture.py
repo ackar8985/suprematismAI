@@ -12,12 +12,13 @@ class Picture:
         self.shapes = []
         self.outside = 0
         self.inside = 0
-        self.max_shapes = 4
+        self.max_shapes = 6
         self.width, self.height = 1000, 1000
 
         # Generate random shapes
         self.shape_functions = [self.random_circle, self.random_square, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
-        num_shapes = random.randint(1, self.max_shapes)
+        #num_shapes = random.randint(1, self.max_shapes)
+        num_shapes = 1
 
         for _ in range(num_shapes):
             random.choice(self.shape_functions)() #(draw)  
@@ -32,7 +33,9 @@ class Picture:
         y = random.randint(radius, self.height - radius)
         color = random.choice(self.colors)
         #draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline=color)
-        self.shapes.append(('circle', ((x - radius, y - radius), (x + radius, y + radius)), color))
+        newShape = ('circle', ((x - radius, y - radius), (x + radius, y + radius)), color)
+        self.shapes.append(newShape)
+        return newShape
 
     def random_rotated_rectangle(self):
         width_rect = random.randint(20, 150)
@@ -54,7 +57,9 @@ class Picture:
             rotated_corners.append((rx, ry))
 
         #draw.polygon(rotated_corners, fill=color, outline=color)
-        self.shapes.append(('rotatedRectangle', rotated_corners, color))
+        newShape = ('rotatedRectangle', rotated_corners, color)
+        self.shapes.append(newShape)
+        return newShape
 
     def random_square(self):
         side = random.randint(20, 100)
@@ -62,7 +67,9 @@ class Picture:
         y = random.randint(side, self.height - side)
         color = random.choice(self.colors)
         #draw.rectangle((x, y, x + side, y + side), fill=color, outline=color)
-        self.shapes.append(('rectangle', ((x, y), (x + side, y + side)), color))
+        newShape = ('square', ((x, y), (x + side, y + side)), color)
+        self.shapes.append(newShape)
+        return newShape
 
     def random_rectangle(self):
         width_rect = random.randint(20, 150)
@@ -71,7 +78,9 @@ class Picture:
         y = random.randint(0, self.height - height_rect)
         color = random.choice(self.colors)
         #draw.rectangle((x, y, x + width_rect, y + height_rect), fill=color, outline=color)
-        self.shapes.append(('rectangle', ((x, y), (x + width_rect, y + height_rect)), color))
+        newShape = ('rectangle', ((x, y), (x + width_rect, y + height_rect)), color)
+        self.shapes.append(newShape)
+        return newShape
 
     def random_triangle(self):
         x1, y1 = random.randint(0, self.width), random.randint(0, self.height)
@@ -79,7 +88,9 @@ class Picture:
         x3, y3 = random.randint(0, self.width), random.randint(0, self.height)
         color = random.choice(self.colors)
         #draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=color, outline=color)
-        self.shapes.append(('triangle', ((x1, y1), (x2, y2), (x3, y3)), color))
+        newShape = ('triangle', ((x1, y1), (x2, y2), (x3, y3)), color)
+        self.shapes.append(newShape)
+        return newShape
 
     def findInsideOutside(self):    #find fitness
         overallFitness = 0
@@ -90,10 +101,11 @@ class Picture:
                 else:
                     self.inside += 1
         overallFitness = self.inside - self.outside
-        print("Outside:", self.outside)
-        print("Inside:", self.inside)
-        print("Fitness:", (self.inside - self.outside))
-        print("Total shapes:", len(self.shapes))
+        # print("Outside:", self.outside)
+        # print("Inside:", self.inside)
+        # print("Total shapes:", len(self.shapes))
+
+        # print("Fitness:", overallFitness)
         return overallFitness
 
     def getShapes(self):
@@ -154,18 +166,31 @@ class Picture:
         canvas.show()
     
     def mutate(self):
-        randomIndex = random.randint(0, len(self.shapes))
-        self.shapes[randomIndex] = random.choice(self.shape_functions)()
+        randomIndex = random.randint(0, len(self.shapes)-1)
+        
+        randomShapeIndex = random.randint(0,4)
+
+        match randomShapeIndex:
+            case 0:
+                self.shapes[randomIndex] = self.random_circle()
+            case 1:
+                self.shapes[randomIndex] = self.random_rectangle()
+            case 2:
+                self.shapes[randomIndex] = self.random_rotated_rectangle()
+            case 3:
+                self.shapes[randomIndex] = self.random_square()
+            case 4:
+                self.shapes[randomIndex] = self.random_triangle()
+
+        
     
     def cross(self, target):
-        if len(self.shapes) < len(target.shapes):
-            crossIndex = random.randint(0, len(self.shapes)) #the target picture may have more shapes than the crosser
-            print(crossIndex)
+        if len(self.shapes) <= len(target.shapes):
+            crossIndex = random.randint(len(self.shapes)//2, len(self.shapes)) #the target picture may have more shapes than the crosser
             for i in range(crossIndex, len(self.shapes)):
                 self.shapes[i] = target.shapes[i]
         else:
-            crossIndex = random.randint(0, len(target.shapes)) #the target picture may have more shapes than the crosser
-            print(crossIndex)
+            crossIndex = random.randint(len(target.shapes)//2, len(target.shapes)) #vice versa
             for i in range(crossIndex, len(target.shapes)):
                 self.shapes[i] = target.shapes[i]              
 
@@ -176,8 +201,8 @@ class Picture:
         child1.cross(pic2) #bug: doesn't cross when the parent only has 1 shape
         child2.cross(pic1)
 
-        # child1.mutate()
-        # child2.mutate()
+        child1.mutate()
+        child2.mutate()
 
         children = [child1, child2]
 
