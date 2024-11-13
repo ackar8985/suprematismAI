@@ -12,7 +12,7 @@ class Picture:
         self.shapes = []
         self.outside = 0
         self.inside = 0
-        self.max_shapes = 6
+        self.max_shapes = 20
         self.width, self.height = 1000, 1000
 
         # Generate random shapes
