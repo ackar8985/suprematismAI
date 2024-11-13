@@ -1,14 +1,25 @@
 from Picture import Picture
+from Population import Population
 
-picture1 = Picture()
-picture2 = Picture()
+# picture1 = Picture()
+# picture2 = Picture()
 
-picture1.display()
-picture2.display()
+# picture1.display()
+# picture2.display()
 
+# children = Picture.breedingStep(picture1, picture2)
 
-# print(picture1.getShapes())
-# print("\n")
-# print(picture2.getShapes())
+# for i in range(2):
+#     print(children[i].getShapes())
+#     print("\n")
+#     children[i].display()
 
-picture1.findInsideOutside()
+population = Population()
+population.printPopulation()
+
+population.natural_selection()
+print("\nafter: ")
+population.printPopulation()
+
+population.simulation()
+population.population[0].display()
