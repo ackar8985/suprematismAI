@@ -7,12 +7,6 @@ from Population import Population
 # picture1.display()
 # picture2.display()
 
-
-# print(picture1.getShapes())
-# print("\n\n")
-# print(picture2.getShapes())
-# print("\n\n")
-
 # children = Picture.breedingStep(picture1, picture2)
 
 # for i in range(2):
