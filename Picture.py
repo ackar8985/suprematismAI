@@ -8,7 +8,7 @@ class Picture:
 
     def __init__(self):
         # Define instance variables with self.
-        self.colors = ["red", "blue", "green", "yellow", "black", "cyan", "pink"]
+        self.colors = ["red", "blue", "green", "yellow", "black"]
         self.shapes = []
         self.outside = 0
         self.inside = 0
@@ -112,7 +112,7 @@ class Picture:
         return self.shapes
         
     def display(self): #display pictures as png
-        canvas = Image.new("RGB", (self.width, self.height), "white")
+        canvas = Image.new("RGB", (self.width, self.height), "#fff1c3")
         draw = ImageDraw.Draw(canvas)
 
         # Draw guide lines

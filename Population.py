@@ -96,4 +96,5 @@ class Population:
         for i in range(20):
             self.natural_selection()
             print("Fitness: " + str(self.overallFitness()))
+            #self.population[0].display()
             self.shuffle()
