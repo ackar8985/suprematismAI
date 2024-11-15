@@ -1,5 +1,6 @@
 from Picture import Picture
 from Population import Population
+import matplotlib.pyplot as plt
 
 # picture1 = Picture()
 # picture2 = Picture()
@@ -15,11 +16,10 @@ from Population import Population
 #     children[i].display()
 
 population = Population()
-population.printPopulation()
-
-population.natural_selection()
-print("\nafter: ")
-population.printPopulation()
+#population.printPopulation()
 
 population.simulation()
-population.population[0].display()
+
+
+plt.plot(population.fitnessToPlot)
+plt.show()

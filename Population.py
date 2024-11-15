@@ -1,10 +1,12 @@
 from Picture import Picture
 
+
 POP = 20
 
 class Population:
     def __init__(self):
-        self.population = []    
+        self.population = []  
+        self.fitnessToPlot = []  
         for i in range(POP):
             self.population.append(Picture())
     
@@ -55,7 +57,6 @@ class Population:
 
             i = i+4
 
-    
 
 #shuffle
     #temp object
@@ -75,7 +76,8 @@ class Population:
 #fight
     #compare fitness, return winner
     def fight(self, pic1, pic2):
-        if (pic1.findInsideOutside() >= pic2.findInsideOutside()):
+        #if (pic1.verticalAndColorFitness() >= pic2.verticalAndColorFitness()):    # insert if condition here to switch between fitness functions
+        if (pic1.diagonalAndColorFitness() >= pic2.diagonalAndColorFitness()):
             return pic1
         else: return pic2
     
@@ -83,7 +85,9 @@ class Population:
     def overallFitness(self):
         sum = 0
         for pic in self.population:
-            sum = sum + pic.findInsideOutside()
+            #sum = sum + pic.verticalAndColorFitness()    # insert if condition here to switch between fitness functions
+            sum = sum + pic.diagonalAndColorFitness()
+        self.fitnessToPlot.append(sum)
         return sum
 
 #simulation
@@ -92,9 +96,18 @@ class Population:
         #calculate fitness
         #shuffle
         #i++
+    
     def simulation(self):
-        for i in range(20):
+        
+        for i in range(100):
+            # display first element from first and 99 iteration
+            if (i == 0 or i == 99):
+                self.population[0].display()
+            
             self.natural_selection()
-            print("Fitness: " + str(self.overallFitness()))
-            #self.population[0].display()
+
+            self.fitnessToPlot.append(self.overallFitness())
+            
             self.shuffle()
+            
+            

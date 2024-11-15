@@ -8,20 +8,33 @@ class Picture:
 
     def __init__(self):
         # Define instance variables with self.
-        self.colors = ["red", "blue", "green", "yellow", "black"]
+
+        # array of colors to be chosen from
+        self.colors = [
+            '#000000',  # Black
+            '#FF0000',  # Red
+            '#FFFF00',  # Yellow
+            '#000080',  # Navy
+            '#006400',  # Dark Green
+            '#FF00FF',  # Magenta
+            '#00FFFF',  # Cyan
+            '#FFA500',  # Orange
+            '#800080',  # Purple
+            '#A52A2A']  # Brown
+            
         self.shapes = []
-        self.outside = 0
-        self.inside = 0
-        self.max_shapes = 20
+        self.max_shapes = 10
         self.width, self.height = 1000, 1000
 
         # Generate random shapes
-        self.shape_functions = [self.random_circle, self.random_square, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
-        #num_shapes = random.randint(1, self.max_shapes)
-        num_shapes = 1
-
+        self.shape_functions = [self.random_circle, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
+        num_shapes = random.randint(1, self.max_shapes)
+        #num_shapes = 1
+        
+        # populate picture objects with shapes
         for _ in range(num_shapes):
-            random.choice(self.shape_functions)() #(draw)  
+            newShape = random.choice(self.shape_functions)()
+            self.shapes.append(newShape)
          
     def copy(self):
         copyPic = deepcopy(self)
@@ -34,7 +47,6 @@ class Picture:
         color = random.choice(self.colors)
         #draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline=color)
         newShape = ('circle', ((x - radius, y - radius), (x + radius, y + radius)), color)
-        self.shapes.append(newShape)
         return newShape
 
     def random_rotated_rectangle(self):
@@ -58,18 +70,9 @@ class Picture:
 
         #draw.polygon(rotated_corners, fill=color, outline=color)
         newShape = ('rotatedRectangle', rotated_corners, color)
-        self.shapes.append(newShape)
         return newShape
 
-    def random_square(self):
-        side = random.randint(20, 100)
-        x = random.randint(side, self.width - side)
-        y = random.randint(side, self.height - side)
-        color = random.choice(self.colors)
-        #draw.rectangle((x, y, x + side, y + side), fill=color, outline=color)
-        newShape = ('square', ((x, y), (x + side, y + side)), color)
-        self.shapes.append(newShape)
-        return newShape
+   
 
     def random_rectangle(self):
         width_rect = random.randint(20, 150)
@@ -79,7 +82,6 @@ class Picture:
         color = random.choice(self.colors)
         #draw.rectangle((x, y, x + width_rect, y + height_rect), fill=color, outline=color)
         newShape = ('rectangle', ((x, y), (x + width_rect, y + height_rect)), color)
-        self.shapes.append(newShape)
         return newShape
 
     def random_triangle(self):
@@ -89,23 +91,82 @@ class Picture:
         color = random.choice(self.colors)
         #draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=color, outline=color)
         newShape = ('triangle', ((x1, y1), (x2, y2), (x3, y3)), color)
-        self.shapes.append(newShape)
         return newShape
 
-    def findInsideOutside(self):    #find fitness
+    # identify if the point is below the line on the top
+    def lowerTopLine(self, x, y):
+        # Calculate the slope (m) of the line
+        m = (1000 - 300) / (700 - 0)  # slope formula TOP LINE
+
+        # Calculate the y-intercept (b) of the line
+        b = 300 - m * 0  # using point (x1, y1) to calculate b
+
+        # Calculate the y-value of the line at x = px
+        y_line = m * x + b
+
+        # Check if the point is above the line(because its inverted))
+        return y < y_line   
+    
+    # identify if the point is above the line on the bottom
+    def aboveLowerLine(self, x, y):
+        # Calculate the slope (m) of the line
+        m = (700 - 0) / (1000 - 300)  # slope formula LOWER LINE
+
+        # Calculate the y-intercept (b) of the line
+        b = 0 - m * 300  # using point (x1, y1) to calculate b
+
+        # Calculate the y-value of the line at x = px
+        y_line = m * x + b
+
+        # Check if the point is below the line
+        return y > y_line
+
+    def diagonalAndColorFitness(self):    #find fitness
         overallFitness = 0
-        for shape_type, shape_coords, _ in self.shapes:
+        inside = 0
+        outside = 0
+        colorBalance = 0
+        
+        for shape_type, shape_coords, color in self.shapes:
+            for point in shape_coords:
+                
+                # if the point is between the lines increase the fitness by 1, else - decrease by 1
+                if (self.aboveLowerLine(point[0], point[1]) and self.lowerTopLine(point[0], point[1])):
+                    inside += 1
+                else:
+                    outside += 1
+                
+                #check if shape color is one of the suprematism colors
+                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
+                    colorBalance += 1
+                else:
+                    colorBalance -= 1
+                    
+        overallFitness = inside - outside + colorBalance
+
+        return overallFitness
+        
+    def verticalAndColorFitness(self):    #find fitness
+        overallFitness = 0
+        inside = 0
+        outside = 0
+        colorBalance = 0
+        print("==============")
+        for shape_type, shape_coords, color in self.shapes:
             for point in shape_coords:
                 if point[0] < 300 or point[0] > 700:
-                    self.outside += 1
+                    outside += 1
                 else:
-                    self.inside += 1
-        overallFitness = self.inside - self.outside
-        # print("Outside:", self.outside)
-        # print("Inside:", self.inside)
-        # print("Total shapes:", len(self.shapes))
+                    inside += 1
+                    
+                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
+                    colorBalance += 1
+                else:
+                    colorBalance -= 1
+        
+                    
+        overallFitness = inside - outside + colorBalance
 
-        # print("Fitness:", overallFitness)
         return overallFitness
 
     def getShapes(self):
@@ -116,8 +177,12 @@ class Picture:
         draw = ImageDraw.Draw(canvas)
 
         # Draw guide lines
-        draw.line((300, 0, 300, self.height), fill="black", width=3)
-        draw.line((700, 0, 700, self.height), fill="black", width=3)
+        #draw.line((300, 0, 300, self.height), fill="black", width=3)
+        #draw.line((700, 0, 700, self.height), fill="black", width=3)
+        
+        draw.line((0, 300, 700, 1000), fill="black", width=3)
+        draw.line((300, 0, 1000, 700), fill="black", width=3)
+        
 
         for shape in self.shapes:
             if (shape[0] == 'circle'):
@@ -177,9 +242,9 @@ class Picture:
                 self.shapes[randomIndex] = self.random_rectangle()
             case 2:
                 self.shapes[randomIndex] = self.random_rotated_rectangle()
+            #case 3:
+             #   self.shapes[randomIndex] = self.random_square()
             case 3:
-                self.shapes[randomIndex] = self.random_square()
-            case 4:
                 self.shapes[randomIndex] = self.random_triangle()
 
         
@@ -195,15 +260,24 @@ class Picture:
                 self.shapes[i] = target.shapes[i]              
 
     def breedingStep(pic1, pic2):
+        
         child1 = pic1.copy()
+        
+        
         child2 = pic2.copy()
 
         child1.cross(pic2) #bug: doesn't cross when the parent only has 1 shape
         child2.cross(pic1)
 
+        #len1 = len(child1.getShapes())
+
         child1.mutate()
         child2.mutate()
-
+        
+        #len2= len(child1.getShapes())
+        
+        #print("The length is: ", len1, " ", len2)
+        
         children = [child1, child2]
 
         return children
