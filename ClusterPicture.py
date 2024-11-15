@@ -2,9 +2,11 @@ import random
 from PIL import Image, ImageDraw
 import math
 from copy import deepcopy
+import numpy as np
 
+PI = 3.14
 
-class Picture:
+class ClusterPicture:
 
     def __init__(self):
         # Define instance variables with self.
@@ -27,7 +29,7 @@ class Picture:
         self.width, self.height = 1000, 1000
 
         # Generate random shapes
-        self.shape_functions = [self.random_circle, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
+        self.shape_functions = [self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
         num_shapes = random.randint(1, self.max_shapes)
         #num_shapes = 1
         
@@ -39,15 +41,6 @@ class Picture:
     def copy(self):
         copyPic = deepcopy(self)
         return copyPic
-
-    def random_circle(self):
-        radius = random.randint(20, 100)
-        x = random.randint(radius, self.width - radius)
-        y = random.randint(radius, self.height - radius)
-        color = random.choice(self.colors)
-        #draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline=color)
-        newShape = ('circle', ((x - radius, y - radius), (x + radius, y + radius)), color)
-        return newShape
 
     def random_rotated_rectangle(self):
         width_rect = random.randint(20, 150)
@@ -72,8 +65,6 @@ class Picture:
         newShape = ('rotatedRectangle', rotated_corners, color)
         return newShape
 
-   
-
     def random_rectangle(self):
         width_rect = random.randint(20, 150)
         height_rect = random.randint(20, 150)
@@ -93,81 +84,80 @@ class Picture:
         newShape = ('triangle', ((x1, y1), (x2, y2), (x3, y3)), color)
         return newShape
 
-    # identify if the point is below the line on the top
-    def lowerTopLine(self, x, y):
-        # Calculate the slope (m) of the line
-        m = (1000 - 300) / (700 - 0)  # slope formula TOP LINE
-
-        # Calculate the y-intercept (b) of the line
-        b = 300 - m * 0  # using point (x1, y1) to calculate b
-
-        # Calculate the y-value of the line at x = px
-        y_line = m * x + b
-
-        # Check if the point is above the line(because its inverted))
-        return y < y_line   
-    
-    # identify if the point is above the line on the bottom
-    def aboveLowerLine(self, x, y):
-        # Calculate the slope (m) of the line
-        m = (700 - 0) / (1000 - 300)  # slope formula LOWER LINE
-
-        # Calculate the y-intercept (b) of the line
-        b = 0 - m * 300  # using point (x1, y1) to calculate b
-
-        # Calculate the y-value of the line at x = px
-        y_line = m * x + b
-
-        # Check if the point is below the line
-        return y > y_line
-
-    def diagonalAndColorFitness(self):    #find fitness
-        overallFitness = 0
-        inside = 0
-        outside = 0
-        colorBalance = 0
-        
-        for shape_type, shape_coords, color in self.shapes:
-            for point in shape_coords:
-                
-                # if the point is between the lines increase the fitness by 1, else - decrease by 1
-                if (self.aboveLowerLine(point[0], point[1]) and self.lowerTopLine(point[0], point[1])):
-                    inside += 1
-                else:
-                    outside += 1
-                
+    def colorFitness(self):
+            colorBalance = 0
+            for shape_type, shape_coords, color in self.shapes:
                 #check if shape color is one of the suprematism colors
                 if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
                     colorBalance += 1
                 else:
                     colorBalance -= 1
-                    
-        overallFitness = inside - outside + colorBalance
-
-        return overallFitness
+            return colorBalance
+    
+    def inCluster(self):
+        for shape in self.shapes:
+            if shape[0] == 'rectangle':
+                return
+            elif shape[0] == 'triangle':
+                return
+            else:
+                return
         
-    def verticalAndColorFitness(self):    #find fitness
-        overallFitness = 0
-        inside = 0
-        outside = 0
-        colorBalance = 0
-        print("==============")
-        for shape_type, shape_coords, color in self.shapes:
-            for point in shape_coords:
-                if point[0] < 300 or point[0] > 700:
-                    outside += 1
-                else:
-                    inside += 1
-                    
-                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
-                    colorBalance += 1
-                else:
-                    colorBalance -= 1
-        
-                    
-        overallFitness = inside - outside + colorBalance
+    def calcArea(self,x,y): #Reference: https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+        #x and y are lists of latitudes and longitudes of the vertices of a shape
+        return 0.5*np.abs(np.dot(x,np.roll(y,1)) - np.dot(y,np.roll(x,1)))
 
-        return overallFitness
+    def calcOverlapFitness(self):
+        global PI
+
+        clusterAreaSurface = 350*350*PI #because the area has a diameter of 700
+
+        x = []
+        y = []
+        areas = []
+
+        #get coordinates of each shape in the picture
+        for shape in self.shapes:
+            if(shape[0] == 'triangle'):
+                for i in range(3):
+                    x.append(shape[1][i][0])
+                    y.append(shape[1][i][1])
+            elif(shape[0] == 'rectangle'): #coordinates have to be in an order
+                x.append(shape[1][0][0])    #top left vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #top right vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #bottom right vetex
+                y.append(shape[1][1][1])
+
+                x.append(shape[1][0][0]) #bottom left vertex
+                y.append(shape[1][1][1])
+            
+            elif(shape[0] == 'rotatedRectangle'):
+                x.append(shape[1][0][0])    #top left vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #top right vertex
+                y.append(shape[1][1][1])
+
+                x.append(shape[1][2][0]) #bottom right vetex
+                y.append(shape[1][2][1])
+
+                x.append(shape[1][3][0]) #bottom left vertex
+                y.append(shape[1][3][1])
+
+            # calculate area of each shape
+            areas.append(self.calcArea(x, y))
+        
+        for i in range(len(self.shapes)):
+            print(areas[i])
+
+        
+
+        fitness = 0
+
 
     def getShapes(self):
         return self.shapes
@@ -176,24 +166,11 @@ class Picture:
         canvas = Image.new("RGB", (self.width, self.height), "#fff1c3")
         draw = ImageDraw.Draw(canvas)
 
-        # Draw guide lines
-        #draw.line((300, 0, 300, self.height), fill="black", width=3)
-        #draw.line((700, 0, 700, self.height), fill="black", width=3)
-        
-        draw.line((0, 300, 700, 1000), fill="black", width=3)
-        draw.line((300, 0, 1000, 700), fill="black", width=3)
-        
+        # Draw guide area    
+        draw.ellipse((0, 0, 700, 700), fill=None, outline="black")
 
         for shape in self.shapes:
-            if (shape[0] == 'circle'):
-                x1 = shape[1][0][0]
-                y1 = shape[1][0][1]
-                x2 = shape[1][1][0]
-                y2 = shape[1][1][1]
-                color = shape[2]
-                draw.ellipse((x1, y1, x2, y2), fill=color, outline=color)
-                
-            elif (shape[0] == 'triangle'):
+            if (shape[0] == 'triangle'):
                 x1 = shape[1][0][0]
                 y1 = shape[1][0][1]
                 x2 = shape[1][1][0]
@@ -231,20 +208,14 @@ class Picture:
         canvas.show()
     
     def mutate(self):
-        randomIndex = random.randint(0, len(self.shapes)-1)
-        
-        randomShapeIndex = random.randint(0,3)
-
+        randomIndex = random.randint(0, len(self.shapes)-1)     
+        randomShapeIndex = random.randint(0,2)
         match randomShapeIndex:
             case 0:
-                self.shapes[randomIndex] = self.random_circle()
-            case 1:
                 self.shapes[randomIndex] = self.random_rectangle()
-            case 2:
+            case 1:
                 self.shapes[randomIndex] = self.random_rotated_rectangle()
-            #case 3:
-             #   self.shapes[randomIndex] = self.random_square()
-            case 3:
+            case 2:
                 self.shapes[randomIndex] = self.random_triangle()
 
         
@@ -279,4 +250,7 @@ class Picture:
         children = [child1, child2]
 
         return children
-       
+
+picture = ClusterPicture()
+picture.calcOverlapFitness()
+picture.display()
