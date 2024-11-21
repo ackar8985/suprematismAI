@@ -1,14 +1,16 @@
 from Picture import Picture
-
+import random
 
 POP = 20
 
 class Population:
-    def __init__(self):
-        self.population = []  
+    def __init__(self, style):
+        self.population = []
+        self.style = style
         self.fitnessToPlot = []  
+        self.idealAngle = random.randint(0, 360)
         for i in range(POP):
-            self.population.append(Picture())
+            self.population.append(Picture(self.style))
     
     #print function for array
     def printPopulation(self):
@@ -65,7 +67,7 @@ class Population:
         #i+=2
     
     def shuffle(self):
-        temp = Picture()
+        temp = Picture(self.style)
         i = 0
         while i in range(POP-4):
             temp = self.population[i]
@@ -76,18 +78,33 @@ class Population:
 #fight
     #compare fitness, return winner
     def fight(self, pic1, pic2):
-        #if (pic1.verticalAndColorFitness() >= pic2.verticalAndColorFitness()):    # insert if condition here to switch between fitness functions
-        if (pic1.diagonalAndColorFitness() >= pic2.diagonalAndColorFitness()):
-            return pic1
-        else: return pic2
+        
+        if (self.style == "vertical"):
+            if (pic1.verticalAndColorFitness() >= pic2.verticalAndColorFitness()): 
+                return pic1
+            else: 
+                return pic2
+        elif (self.style == "diagonal"):
+            if (pic1.diagonalAndColorFitness() >= pic2.diagonalAndColorFitness()):
+                return pic1
+            else: 
+                return pic2
+            
+        elif (self.style == "cluster"):
+            if (pic1.clusterAndColorFitness(self.idealAngle) >= pic2.clusterAndColorFitness(self.idealAngle)):
+                return pic1
+            else: 
+                return pic2
+            
+        
     
 #population fitness
     def overallFitness(self):
         sum = 0
         for pic in self.population:
-            #sum = sum + pic.verticalAndColorFitness()    # insert if condition here to switch between fitness functions
-            sum = sum + pic.diagonalAndColorFitness()
-        self.fitnessToPlot.append(sum)
+             
+                sum = sum + pic.clusterAndColorFitness(self.idealAngle)
+                
         return sum
 
 #simulation
@@ -99,15 +116,15 @@ class Population:
     
     def simulation(self):
         
-        for i in range(100):
+        for i in range(800):
             # display first element from first and 99 iteration
-            if (i == 0 or i == 99):
-                self.population[0].display()
-            
+            if (i == 0 or i == 399):
+                self.population[19].display()
+                print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
+                
             self.natural_selection()
 
             self.fitnessToPlot.append(self.overallFitness())
             
             self.shuffle()
-            
             

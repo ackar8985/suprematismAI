@@ -6,7 +6,7 @@ from copy import deepcopy
 
 class Picture:
 
-    def __init__(self):
+    def __init__(self, style):
         # Define instance variables with self.
 
         # array of colors to be chosen from
@@ -23,16 +23,18 @@ class Picture:
             '#A52A2A']  # Brown
             
         self.shapes = []
-        self.max_shapes = 10
+        self.max_shapes = 20
         self.width, self.height = 1000, 1000
-
+        self.style = style
+        
         # Generate random shapes
-        self.shape_functions = [self.random_circle, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
-        num_shapes = random.randint(1, self.max_shapes)
-        #num_shapes = 1
+        if (self.style == "cluster"):
+            self.shape_functions = [self.random_rotated_rectangle] 
+        else:
+            self.shape_functions = [self.random_circle, self.random_rectangle, self.random_triangle, self.random_rotated_rectangle]
         
         # populate picture objects with shapes
-        for _ in range(num_shapes):
+        for _ in range(self.max_shapes):
             newShape = random.choice(self.shape_functions)()
             self.shapes.append(newShape)
          
@@ -46,7 +48,7 @@ class Picture:
         y = random.randint(radius, self.height - radius)
         color = random.choice(self.colors)
         #draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline=color)
-        newShape = ('circle', ((x - radius, y - radius), (x + radius, y + radius)), color)
+        newShape = ('circle', ((x - radius, y - radius), (x + radius, y + radius)), color, 0)
         return newShape
 
     def random_rotated_rectangle(self):
@@ -69,7 +71,7 @@ class Picture:
             rotated_corners.append((rx, ry))
 
         #draw.polygon(rotated_corners, fill=color, outline=color)
-        newShape = ('rotatedRectangle', rotated_corners, color)
+        newShape = ('rotatedRectangle', rotated_corners, color, angle)
         return newShape
 
    
@@ -81,7 +83,7 @@ class Picture:
         y = random.randint(0, self.height - height_rect)
         color = random.choice(self.colors)
         #draw.rectangle((x, y, x + width_rect, y + height_rect), fill=color, outline=color)
-        newShape = ('rectangle', ((x, y), (x + width_rect, y + height_rect)), color)
+        newShape = ('rectangle', ((x, y), (x + width_rect, y + height_rect)), color, 0)
         return newShape
 
     def random_triangle(self):
@@ -90,7 +92,7 @@ class Picture:
         x3, y3 = random.randint(0, self.width), random.randint(0, self.height)
         color = random.choice(self.colors)
         #draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=color, outline=color)
-        newShape = ('triangle', ((x1, y1), (x2, y2), (x3, y3)), color)
+        newShape = ('triangle', ((x1, y1), (x2, y2), (x3, y3)), color, 0)
         return newShape
 
     # identify if the point is below the line on the top
@@ -120,14 +122,37 @@ class Picture:
 
         # Check if the point is below the line
         return y > y_line
+    
+    def verticalAndColorFitness(self):    #find fitness
+        overallFitness = 0
+        inside = 0
+        outside = 0
+        colorBalance = 0
+        
+        for shape1_type, shape_coords, color, angle in self.shapes:
+            for point in shape_coords:
+                if point[0] < 300 or point[0] > 700:
+                    outside += 1
+                else:
+                    inside += 1
+                    
+                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
+                    colorBalance += 1
+                else:
+                    colorBalance -= 1
+        
+                    
+        overallFitness = inside - outside + colorBalance
 
+        return overallFitness
+    
     def diagonalAndColorFitness(self):    #find fitness
         overallFitness = 0
         inside = 0
         outside = 0
         colorBalance = 0
         
-        for shape_type, shape_coords, color in self.shapes:
+        for shape_type, shape_coords, color, angle in self.shapes:
             for point in shape_coords:
                 
                 # if the point is between the lines increase the fitness by 1, else - decrease by 1
@@ -146,28 +171,23 @@ class Picture:
 
         return overallFitness
         
-    def verticalAndColorFitness(self):    #find fitness
-        overallFitness = 0
-        inside = 0
-        outside = 0
-        colorBalance = 0
-        print("==============")
-        for shape_type, shape_coords, color in self.shapes:
-            for point in shape_coords:
-                if point[0] < 300 or point[0] > 700:
-                    outside += 1
-                else:
-                    inside += 1
-                    
-                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
-                    colorBalance += 1
-                else:
-                    colorBalance -= 1
+    def clusterAndColorFitness(self, idealAngle):    #find fitness
         
-                    
-        overallFitness = inside - outside + colorBalance
-
+        overallFitness = 0
+        
+        for shape1_type, shape2_coords, color1, angle1 in self.shapes:
+            if (shape1_type == "rotatedRectangle"):
+                
+                #print(angle1  < idealAngle + 15 and angle1 > idealAngle - 15)
+                
+                if (angle1  < idealAngle + 15 and angle1 > idealAngle - 15):
+                    overallFitness += 1
+                else:
+                    overallFitness -= 1
+ 
+        
         return overallFitness
+        
 
     def getShapes(self):
         return self.shapes
@@ -176,14 +196,18 @@ class Picture:
         canvas = Image.new("RGB", (self.width, self.height), "#fff1c3")
         draw = ImageDraw.Draw(canvas)
 
-        # Draw guide lines
-        #draw.line((300, 0, 300, self.height), fill="black", width=3)
-        #draw.line((700, 0, 700, self.height), fill="black", width=3)
+        if (self.style == "vertical"):
+            draw.line((300, 0, 300, self.height), fill="black", width=3)
+            draw.line((700, 0, 700, self.height), fill="black", width=3)
         
-        draw.line((0, 300, 700, 1000), fill="black", width=3)
-        draw.line((300, 0, 1000, 700), fill="black", width=3)
+                
+        elif (self.style == "diagonal"):
+            draw.line((0, 300, 700, 1000), fill="black", width=3)
+            draw.line((300, 0, 1000, 700), fill="black", width=3)
+            
+        #elif (self.style == "cluster"):
+            #DRAW THE AREA HERE
         
-
         for shape in self.shapes:
             if (shape[0] == 'circle'):
                 x1 = shape[1][0][0]
@@ -233,19 +257,22 @@ class Picture:
     def mutate(self):
         randomIndex = random.randint(0, len(self.shapes)-1)
         
-        randomShapeIndex = random.randint(0,3)
 
-        match randomShapeIndex:
-            case 0:
-                self.shapes[randomIndex] = self.random_circle()
-            case 1:
-                self.shapes[randomIndex] = self.random_rectangle()
-            case 2:
-                self.shapes[randomIndex] = self.random_rotated_rectangle()
-            #case 3:
-             #   self.shapes[randomIndex] = self.random_square()
-            case 3:
-                self.shapes[randomIndex] = self.random_triangle()
+        randomShapeIndex = random.randint(0,4)
+        
+        if (self.style == "cluster"):
+            self.shapes[randomIndex] = self.random_rotated_rectangle()
+        
+        else:
+            match randomShapeIndex:
+                case 0:
+                    self.shapes[randomIndex] = self.random_circle()
+                case 1:
+                    self.shapes[randomIndex] = self.random_rectangle()
+                case 2:
+                    self.shapes[randomIndex] = self.random_rotated_rectangle()
+                case 3:
+                    self.shapes[randomIndex] = self.random_triangle()
 
         
     
