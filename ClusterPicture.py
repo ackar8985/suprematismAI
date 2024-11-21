@@ -147,7 +147,8 @@ class ClusterPicture:
             
         return overlaps
         
-    def calcArea(self,x,y): #Reference: https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    #Reference: https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    def calcArea(self,x,y): 
         #x and y are lists of latitudes and longitudes of the vertices of a shape
         return 0.5*np.abs(np.dot(x,np.roll(y,1)) - np.dot(y,np.roll(x,1)))
 
@@ -159,7 +160,7 @@ class ClusterPicture:
         x = []
         y = []
         areas = []
-        overlaps = self.checkOverlapCluster()
+        overlaps = self.checkOverlapCluster() #array to store all overlapping shapes
 
         #get coordinates of each shape in the picture
         for shape in overlaps:
@@ -199,12 +200,21 @@ class ClusterPicture:
             #do the relevant math to find the area of the overlapping parts
             #find the percentage of overlap
         
-        for i in range(len(overlaps)):
-            print(areas[i])
+        sumOverlapShapes = 0
 
-        
+        for i in range(len(overlaps)): #print areas/surfaces of shapes that overlap the circle
+            sumOverlapShapes += areas[i]
+            #print(areas[i])
 
-        fitness = 0
+        #print(sumOverlapShapes)
+
+        ####system of equations (if possible):
+        #2*clusterAreaSurface - sumOverlapShapes = 2 * S_remain + S_overlap - S_not_overlap
+        #clusterAreaSurface = S_remain + S_overlap
+        #sumOverlapShapes = S_overlap + S_not_overlap
+
+        fitness = sumOverlapShapes/clusterAreaSurface #the higher, the better
+        return fitness
 
 
     def getShapes(self):
@@ -304,4 +314,4 @@ print(picture.getShapes())
 
 picture.display()
 
-picture.calcOverlapFitness()
+print(picture.calcOverlapFitness())
