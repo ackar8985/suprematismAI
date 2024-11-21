@@ -1,6 +1,7 @@
 from Picture import Picture
 import random
 
+
 POP = 20
 
 class Population:
@@ -116,9 +117,9 @@ class Population:
     
     def simulation(self):
         
-        for i in range(800):
+        for i in range(10000):
             # display first element from first and 99 iteration
-            if (i == 0 or i == 399):
+            if (i == 0 or i == 9999):
                 self.population[19].display()
                 print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
                 

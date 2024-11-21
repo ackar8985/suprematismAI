@@ -2,7 +2,9 @@ import random
 from PIL import Image, ImageDraw
 import math
 from copy import deepcopy
+import numpy as np
 
+PI = 3.14
 
 class Picture:
 
@@ -171,22 +173,7 @@ class Picture:
 
         return overallFitness
         
-    def clusterAndColorFitness(self, idealAngle):    #find fitness
-        
-        overallFitness = 0
-        
-        for shape1_type, shape2_coords, color1, angle1 in self.shapes:
-            if (shape1_type == "rotatedRectangle"):
-                
-                #print(angle1  < idealAngle + 15 and angle1 > idealAngle - 15)
-                
-                if (angle1  < idealAngle + 15 and angle1 > idealAngle - 15):
-                    overallFitness += 1
-                else:
-                    overallFitness -= 1
- 
-        
-        return overallFitness
+
         
 
     def getShapes(self):
@@ -205,8 +192,8 @@ class Picture:
             draw.line((0, 300, 700, 1000), fill="black", width=3)
             draw.line((300, 0, 1000, 700), fill="black", width=3)
             
-        #elif (self.style == "cluster"):
-            #DRAW THE AREA HERE
+        elif (self.style == "cluster"):
+            draw.ellipse((0, 0, 500, 500), fill=None, outline="black")
         
         for shape in self.shapes:
             if (shape[0] == 'circle'):
@@ -307,3 +294,130 @@ class Picture:
 
         return children
        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def getDistanceFromCenter(self, x, y):
+        return math.sqrt(math.pow(x - 250, 2) + math.pow(y - 250, 2))
+    
+    def checkOverlapCluster(self):
+        overlaps = [] #array to store shapes that are overlapping the cluster
+
+        for shape in self.shapes:
+            for vertex in shape[1]:
+                x = vertex[0]
+                y = vertex[1]
+
+                distanceFromCenter = self.getDistanceFromCenter(x, y)
+
+                if distanceFromCenter < 250:
+                    overlaps.append(shape)
+                    break
+            
+        return overlaps
+        
+    #Reference: https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    def calcArea(self,x,y): 
+        #x and y are lists of latitudes and longitudes of the vertices of a shape
+        return 0.5*np.abs(np.dot(x,np.roll(y,1)) - np.dot(y,np.roll(x,1)))
+
+    def calcOverlapFitness(self):
+        global PI
+
+        clusterAreaSurface = 250*250*PI #because the area has a diameter of 700
+
+        x = []
+        y = []
+        areas = []
+        overlaps = self.checkOverlapCluster() #array to store all overlapping shapes
+
+        #get coordinates of each shape in the picture
+        for shape in overlaps:
+            if(shape[0] == 'triangle'):
+                for i in range(3):
+                    x.append(shape[1][i][0])
+                    y.append(shape[1][i][1])
+            elif(shape[0] == 'rectangle'): #coordinates have to be in an order
+                x.append(shape[1][0][0])    #top left vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #top right vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #bottom right vetex
+                y.append(shape[1][1][1])
+
+                x.append(shape[1][0][0]) #bottom left vertex
+                y.append(shape[1][1][1])
+            
+            elif(shape[0] == 'rotatedRectangle'):
+                x.append(shape[1][0][0])    #top left vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #top right vertex
+                y.append(shape[1][1][1])
+
+                x.append(shape[1][2][0]) #bottom right vetex
+                y.append(shape[1][2][1])
+
+                x.append(shape[1][3][0]) #bottom left vertex
+                y.append(shape[1][3][1])
+
+            # calculate area of each shape that overlaps the cluster circle
+            areas.append(self.calcArea(x, y))
+
+            #do the relevant math to find the area of the overlapping parts
+            #find the percentage of overlap
+        
+        sumOverlapShapes = 0
+
+        for i in range(len(overlaps)): #print areas/surfaces of shapes that overlap the circle
+            sumOverlapShapes += areas[i]
+            #print(areas[i])
+
+        #print(sumOverlapShapes)
+
+        ####system of equations (if possible):
+        #2*clusterAreaSurface - sumOverlapShapes = 2 * S_remain + S_overlap - S_not_overlap
+        #clusterAreaSurface = S_remain + S_overlap
+        #sumOverlapShapes = S_overlap + S_not_overlap
+
+        fitness = sumOverlapShapes/clusterAreaSurface #the higher, the better
+        return fitness
+
+
+
+    def clusterAndColorFitness(self, idealAngle):    #find fitness
+        
+        paralFitness = 0
+        
+        for shape1_type, shape2_coords, color1, angle1 in self.shapes:
+            if (shape1_type == "rotatedRectangle"):
+                
+                #print(angle1  < idealAngle + 15 and angle1 > idealAngle - 15)
+                
+                if (angle1  < idealAngle + 10 and angle1 > idealAngle - 10):
+                    paralFitness += 1
+                else:
+                    paralFitness -= 1  
+                     
+        
+        coverageFitness = self.calcOverlapFitness()   # bigger the better
+        
+        
+        return paralFitness * 0.45 + coverageFitness * 100
