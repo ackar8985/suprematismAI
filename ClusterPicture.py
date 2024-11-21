@@ -25,6 +25,7 @@ class ClusterPicture:
             '#A52A2A']  # Brown
             
         self.shapes = []
+        self.overlapShapes = []
         self.max_shapes = 10
         self.width, self.height = 1000, 1000
 
@@ -94,14 +95,57 @@ class ClusterPicture:
                     colorBalance -= 1
             return colorBalance
     
-    def inCluster(self):
+    def getDistanceFromCenter(self, x, y):
+        return math.sqrt(math.pow(x - 350, 2) + math.pow(y - 350, 2))
+    
+    def checkOverlapCluster(self):
+        overlaps = [] #array to store shapes that are overlapping the cluster
+
         for shape in self.shapes:
             if shape[0] == 'rectangle':
-                return
+                x = []
+                y = []
+
+                x.append(shape[1][0][0])    #top left vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #top right vertex
+                y.append(shape[1][0][1])
+
+                x.append(shape[1][1][0]) #bottom right vetex
+                y.append(shape[1][1][1])
+
+                x.append(shape[1][0][0]) #bottom left vertex
+                y.append(shape[1][1][1])
+
+                for i in range(4):
+                    distanceFromCenter = self.getDistanceFromCenter(x[i], y[i])
+                    if distanceFromCenter < 350:
+                        overlaps.append(shape)
+                        break
+
             elif shape[0] == 'triangle':
-                return
+                for vertex in shape[1]:
+                    x = vertex[0]
+                    y = vertex[1]
+
+                    distanceFromCenter = self.getDistanceFromCenter(x, y)
+
+                    if distanceFromCenter < 350:
+                        overlaps.append(shape)
+                        break
             else:
-                return
+                for vertex in shape[1]:
+                    x = vertex[0]
+                    y = vertex[1]
+
+                    distanceFromCenter = self.getDistanceFromCenter(x, y)
+
+                    if distanceFromCenter < 350:
+                        overlaps.append(shape)
+                        break
+            
+        return overlaps
         
     def calcArea(self,x,y): #Reference: https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
         #x and y are lists of latitudes and longitudes of the vertices of a shape
@@ -115,9 +159,10 @@ class ClusterPicture:
         x = []
         y = []
         areas = []
+        overlaps = self.checkOverlapCluster()
 
         #get coordinates of each shape in the picture
-        for shape in self.shapes:
+        for shape in overlaps:
             if(shape[0] == 'triangle'):
                 for i in range(3):
                     x.append(shape[1][i][0])
@@ -148,10 +193,13 @@ class ClusterPicture:
                 x.append(shape[1][3][0]) #bottom left vertex
                 y.append(shape[1][3][1])
 
-            # calculate area of each shape
+            # calculate area of each shape that overlaps the cluster circle
             areas.append(self.calcArea(x, y))
+
+            #do the relevant math to find the area of the overlapping parts
+            #find the percentage of overlap
         
-        for i in range(len(self.shapes)):
+        for i in range(len(overlaps)):
             print(areas[i])
 
         
@@ -252,5 +300,8 @@ class ClusterPicture:
         return children
 
 picture = ClusterPicture()
-picture.calcOverlapFitness()
+print(picture.getShapes())
+
 picture.display()
+
+picture.calcOverlapFitness()
