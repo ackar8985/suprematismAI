@@ -1,23 +1,24 @@
 from Picture import Picture
 import random
 
-
 POP = 20
 
+# class that represents population
 class Population:
     def __init__(self, style):
+        # array that holds picture objects
         self.population = []
         self.style = style
         self.fitnessToPlot = []  
         self.idealAngle = random.randint(0, 360)
+        # populating population with pictures
         for i in range(POP):
             self.population.append(Picture(self.style))
     
-    #print function for array
+    # print function for population's pictures array
     def printPopulation(self):
         for pic in self.population:
             print(pic.getShapes())
-            #pic.display()
 
     #natural selection
     def natural_selection(self):
@@ -117,12 +118,13 @@ class Population:
     
     def simulation(self):
         
-        for i in range(10000):
+        for i in range(100):
             # display first element from first and 99 iteration
-            if (i == 0 or i == 9999):
+            if (i == 0 or i == 99):
                 self.population[19].display()
                 print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
-                
+            if (i % 300 == 0):
+                print(i)
             self.natural_selection()
 
             self.fitnessToPlot.append(self.overallFitness())
