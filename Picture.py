@@ -24,7 +24,7 @@ class Picture:
             '#A52A2A']  # Brown
             
         self.shapes = []
-        self.max_shapes = 10 
+        self.max_shapes = 15 
         self.width, self.height = 1000, 1000
         self.style = style
         
@@ -271,7 +271,7 @@ class Picture:
                 case 3:
                     self.shapes[randomIndex] = self.random_triangle()
 
-    # do one pont crossover in random shapes array location
+    # do one point crossover in random shapes array location
     def cross(self, target):
         if len(self.shapes) <= len(target.shapes):
             crossIndex = random.randint(len(self.shapes)//2, len(self.shapes)) #the target picture may have more shapes than the crosser
@@ -327,7 +327,7 @@ class Picture:
     def calcOverlapFitness(self):
         global PI
 
-        clusterAreaSurface = 250*250*PI #because the area has a diameter of 700
+        clusterAreaSurface = 250*250*PI #because the area has a diameter of 500
 
         x = []
         y = []
@@ -397,7 +397,7 @@ class Picture:
         for shape1_type, shape2_coords, color1, angle1 in self.shapes:
             if (shape1_type == "rotatedRectangle"):
                 
-                #print(angle1  < idealAngle + 15 and angle1 > idealAngle - 15)
+                #print(angle1  < idealAngle + 10 and angle1 > idealAngle - 10)
                 
                 if (angle1  < idealAngle + 10 and angle1 > idealAngle - 10):
                     paralFitness += 1

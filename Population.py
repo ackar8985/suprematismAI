@@ -32,15 +32,11 @@ class Population:
         
         i = 0
         while i in range(POP):
-            # print("Index i: " + str(i))
             
             winnersIndex.clear()    #clear the lists after each tournament of 4
             losersIndex.clear()
 
             for j in range(i, i+3, 2):
-                # print(self.population[j])
-                # print(self.population[j+1])
-                # print("Index j: " + str(j))
                 if (self.fight(self.population[j], self.population[j+1]) == self.population[j]):
                     winnersIndex.append(j)
                     losersIndex.append(j+1)
@@ -126,6 +122,7 @@ class Population:
         
         if self.style == "cluster":
             for i in range(1000):
+                print("Iteration " + str(i))
                 # display first element from first and 99 iteration
                 if (i == 0 or i == 999):
                     self.population[19].display()

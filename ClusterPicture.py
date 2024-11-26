@@ -259,9 +259,6 @@ class ClusterPicture:
                 color = shape[2]
                 draw.polygon(((x1, y1), (x2, y2), (x3, y3), (x4, y4)), fill=color, outline=color)
 
-        # Calculate inside and outside counts
-        #self.findInsideOutside()
-
         # Show canvas and results
         canvas.show()
     
@@ -296,14 +293,8 @@ class ClusterPicture:
         child1.cross(pic2) #bug: doesn't cross when the parent only has 1 shape
         child2.cross(pic1)
 
-        #len1 = len(child1.getShapes())
-
         child1.mutate()
         child2.mutate()
-        
-        #len2= len(child1.getShapes())
-        
-        #print("The length is: ", len1, " ", len2)
         
         children = [child1, child2]
 

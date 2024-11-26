@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 #choose what kind of suprematistic would you like to generate
 
-# population = Population("vertical")
+population = Population("vertical")
 # population = Population("diagonal")
-population = Population("cluster")
+# population = Population("cluster")
 
 # executes the GA
 population.simulation()
