@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 
 
-#population = Population("vertical")
-#population = Population("diagonal")
+# population = Population("vertical")
+# population = Population("diagonal")
 population = Population("cluster")
 
 population.simulation()

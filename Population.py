@@ -102,9 +102,15 @@ class Population:
 #population fitness
     def overallFitness(self):
         sum = 0
-        for pic in self.population:
-             
+        if (self.style == "cluster"):
+            for pic in self.population:
                 sum = sum + pic.clusterAndColorFitness(self.idealAngle)
+        elif (self.style == "vertical"):
+            for pic in self.population:
+                sum = sum + pic.verticalAndColorFitness()
+        else:
+            for pic in self.population:
+                sum = sum + pic.diagonalAndColorFitness()
                 
         return sum
 
@@ -117,15 +123,43 @@ class Population:
     
     def simulation(self):
         
-        for i in range(10000):
-            # display first element from first and 99 iteration
-            if (i == 0 or i == 9999):
-                self.population[19].display()
-                print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
-                
-            self.natural_selection()
+        if self.style == "cluster":
+            for i in range(1000):
+                # display first element from first and last iteration
+                print("Iteration " + str(i))
+                if (i == 0 or i == 999):
+                    self.population[19].display()
+                    print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
+                    
+                self.natural_selection()
 
-            self.fitnessToPlot.append(self.overallFitness())
-            
-            self.shuffle()
+                self.fitnessToPlot.append(self.overallFitness())
+                
+                self.shuffle()
+        elif self.style == "vertical":
+            for i in range(1000):
+                # display first element from first and last iteration
+                print("Iteration " + str(i))
+                if (i == 0 or i == 999):
+                    self.population[19].display()
+                    print("Fitness: ", self.population[19].verticalAndColorFitness())
+                    
+                self.natural_selection()
+
+                self.fitnessToPlot.append(self.overallFitness())
+                
+                self.shuffle()
+        else:
+            for i in range(1000):
+                # display first element from first and last iteration
+                print("Iteration " + str(i))
+                if (i == 0 or i == 999):
+                    self.population[19].display()
+                    print("Fitness: ", self.population[19].diagonalAndColorFitness())
+                    
+                self.natural_selection()
+
+                self.fitnessToPlot.append(self.overallFitness())
+                
+                self.shuffle()
             

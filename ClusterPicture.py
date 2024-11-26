@@ -155,7 +155,7 @@ class ClusterPicture:
     def calcOverlapFitness(self):
         global PI
 
-        clusterAreaSurface = 350*350*PI #because the area has a diameter of 700
+        clusterAreaSurface = 250*250*PI #because the area has a diameter of 700
 
         x = []
         y = []

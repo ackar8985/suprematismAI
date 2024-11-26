@@ -25,7 +25,7 @@ class Picture:
             '#A52A2A']  # Brown
             
         self.shapes = []
-        self.max_shapes = 20
+        self.max_shapes = 10 
         self.width, self.height = 1000, 1000
         self.style = style
         
