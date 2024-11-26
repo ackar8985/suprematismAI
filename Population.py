@@ -1,23 +1,24 @@
 from Picture import Picture
 import random
 
-
 POP = 20
 
+# class that represents population
 class Population:
     def __init__(self, style):
+        # array that holds picture objects
         self.population = []
         self.style = style
         self.fitnessToPlot = []  
         self.idealAngle = random.randint(0, 360)
+        # populating population with pictures
         for i in range(POP):
             self.population.append(Picture(self.style))
     
-    #print function for array
+    # print function for population's pictures array
     def printPopulation(self):
         for pic in self.population:
             print(pic.getShapes())
-            #pic.display()
 
     #natural selection
     def natural_selection(self):
@@ -125,17 +126,17 @@ class Population:
         
         if self.style == "cluster":
             for i in range(1000):
-                # display first element from first and last iteration
-                print("Iteration " + str(i))
+                # display first element from first and 99 iteration
                 if (i == 0 or i == 999):
                     self.population[19].display()
                     print("Fitness: ", self.population[19].clusterAndColorFitness(self.idealAngle))
-                    
+
                 self.natural_selection()
 
                 self.fitnessToPlot.append(self.overallFitness())
-                
+                        
                 self.shuffle()
+
         elif self.style == "vertical":
             for i in range(1000):
                 # display first element from first and last iteration
@@ -143,12 +144,13 @@ class Population:
                 if (i == 0 or i == 999):
                     self.population[19].display()
                     print("Fitness: ", self.population[19].verticalAndColorFitness())
-                    
+                
                 self.natural_selection()
 
                 self.fitnessToPlot.append(self.overallFitness())
                 
                 self.shuffle()
+
         else:
             for i in range(1000):
                 # display first element from first and last iteration
