@@ -24,7 +24,7 @@ class Picture:
             '#A52A2A']  # Brown
             
         self.shapes = []
-        self.max_shapes = 15 
+        self.max_shapes = 10
         self.width, self.height = 1000, 1000
         self.style = style
         
@@ -60,8 +60,13 @@ class Picture:
         
     # create a tuple that contains all the information necessary for representing rotated rectangle
     def random_rotated_rectangle(self):
-        width_rect = random.randint(20, 150)
-        height_rect = random.randint(20, 150)
+        #width_rect = random.randint(20, 150)
+        #height_rect = random.randint(20, 150)
+        
+        width_rect = random.randint(10, 500)
+        height_rect = random.randint(10, 500)
+        
+        
         # generate two random points on plain
         x = random.randint(0, self.width - width_rect)
         y = random.randint(0, self.height - height_rect)
@@ -389,23 +394,107 @@ class Picture:
         return fitness
 
 
+    def withinClusterRadius(self, x, y):
+        return (math.sqrt((x - 250)**2 + (y - 250)**2)) <= 250
+    
+    def calcTriangleArea(self, pointA, pointB, pointC):
+        x1 = pointA[0]
+        y1 = pointA[1]
+        x2 = pointB[0]
+        y2 = pointB[1]
+        x3 = pointC[0]
+        y3 = pointC[1]
+        
+        return 0.5 * abs(x1 * y2 + x2 * y3 + x3 * y1 - y1 * x2 - y2 * x3 - y3 * x1)
+    
 
+    def isWithinCurrentRectangle(self, allVertices, targetLocation):
+        point1 = allVertices[0]
+        point2 = allVertices[1]
+        point3 = allVertices[2]
+        point4 = allVertices[3]
+        
+        x1 = point1[0]
+        y1 = point1[1]
+        x2 = point2[0]
+        y2 = point2[1]
+        x3 = point3[0]
+        y3 = point3[1]
+        x4 = point4[0]
+        y4 = point4[1]
+        
+        combinedTriangleArea = self.calcTriangleArea(point1, point2, targetLocation)
+        combinedTriangleArea += self.calcTriangleArea(point2, point3, targetLocation)
+        combinedTriangleArea += self.calcTriangleArea(point3, point4, targetLocation)
+        combinedTriangleArea += self.calcTriangleArea(point4, point1, targetLocation)
+        
+        rectangleArea = area = 0.5 * abs(x1*y2 + x2*y3 + x3*y4 + x4*y1 - (y1*x2 + y2*x3 + y3*x4 + y4*x1))
+        
+        return combinedTriangleArea <= rectangleArea
+    
+        
+    def is_point_inside_rotated_rectangle(self, px, py, corners, angle):
+        # Calculate the center of the rectangle
+        cx = sum(corner[0] for corner in corners) / 4
+        cy = sum(corner[1] for corner in corners) / 4
+        
+        # Convert angle to radians
+        angle_rad = math.radians(angle)
+        
+        # Translate the point to the rectangle's local coordinate system
+        px_rel = px - cx
+        py_rel = py - cy
+        
+        # Apply the inverse rotation matrix
+        px_rot = math.cos(angle_rad) * px_rel + math.sin(angle_rad) * py_rel
+        py_rot = -math.sin(angle_rad) * px_rel + math.cos(angle_rad) * py_rel
+        
+        # Get the width and height from the corner points (assuming the rectangle is axis-aligned before rotation)
+        w = math.dist(corners[0], corners[1])  # Distance between corner 1 and corner 2 (width)
+        h = math.dist(corners[1], corners[2])  # Distance between corner 2 and corner 3 (height)
+        
+        # Check if the point is inside the axis-aligned bounding box
+        if -w / 2 <= px_rot <= w / 2 and -h / 2 <= py_rot <= h / 2:
+            return True
+        return False
+        
+    
+    
     def clusterAndColorFitness(self, idealAngle):    #find fitness
         
         paralFitness = 0
+        insideFitness = 0
+        noOverlapFitness = 0
+        colorBalance = 0
         
-        for shape1_type, shape2_coords, color1, angle1 in self.shapes:
-            if (shape1_type == "rotatedRectangle"):
+        for shape_type, shape_coords, color, angle in self.shapes:
+            if (shape_type == "rotatedRectangle"):
+                w = shape_coords[2][0] - shape_coords[0][0]
+                h = shape_coords[2][1] - shape_coords[0][1]
                 
-                #print(angle1  < idealAngle + 10 and angle1 > idealAngle - 10)
-                
-                if (angle1  < idealAngle + 10 and angle1 > idealAngle - 10):
-                    paralFitness += 1
+                cx = w / 2
+                cy = h / 2
+
+                if (angle  < idealAngle + 10 and angle > idealAngle - 10):
+                    paralFitness += 4
                 else:
-                    paralFitness -= 1  
-                     
-        
-        coverageFitness = self.calcOverlapFitness()   # bigger the better
-        
-        
-        return paralFitness * 0.45 + coverageFitness * 100
+                    paralFitness -= 4
+                
+                for coords in shape_coords:
+                    if (self.withinClusterRadius(coords[0], coords[1])):
+                        insideFitness += 1.7
+                
+                for shape_type2, shape_coords2, color2, angle2 in self.shapes:
+                    for targetCoords in shape_coords2:
+                        if (self.is_point_inside_rotated_rectangle(targetCoords[0], targetCoords[1], shape_coords, angle)):
+                            noOverlapFitness -= 1
+                            break;
+                            
+                # include the color in fitness calculation, +1 if shape's color is suprematistic
+                if color in ('#000000', '#FF0000', '#FFFF00', '#000080', '#006400'):
+                    colorBalance += 1
+                else:
+                    colorBalance -= 1
+                
+        #print (paralFitness , " " , insideFitness , " " ,noOverlapFitness)
+        return paralFitness + insideFitness + noOverlapFitness + colorBalance
